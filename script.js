@@ -212,6 +212,47 @@ if (phoneTabs.length > 0) {
   });
 }
 
+const inventariseTabs = Array.from(
+  document.querySelectorAll(".demo-tabs [role='tab']"),
+);
+
+const activateInventariseTab = (tab) => {
+  inventariseTabs.forEach((item) => {
+    const selected = item === tab;
+    item.setAttribute("aria-selected", String(selected));
+    item.tabIndex = selected ? 0 : -1;
+
+    const panel = document.getElementById(item.getAttribute("aria-controls"));
+    if (panel) {
+      panel.hidden = !selected;
+    }
+  });
+};
+
+if (inventariseTabs.length > 0) {
+  inventariseTabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => activateInventariseTab(tab));
+    tab.addEventListener("keydown", (event) => {
+      let nextIndex;
+      if (event.key === "ArrowRight") {
+        nextIndex = (index + 1) % inventariseTabs.length;
+      } else if (event.key === "ArrowLeft") {
+        nextIndex = (index - 1 + inventariseTabs.length) % inventariseTabs.length;
+      } else if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = inventariseTabs.length - 1;
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+      inventariseTabs[nextIndex].focus();
+      activateInventariseTab(inventariseTabs[nextIndex]);
+    });
+  });
+}
+
 document.querySelectorAll(".feature-action[data-preview-tab]").forEach((button) => {
   button.addEventListener("click", () => {
     const targetTab = document.getElementById(button.dataset.previewTab);
