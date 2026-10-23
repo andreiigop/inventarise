@@ -1,5 +1,103 @@
 const menuButton = document.querySelector(".menu-toggle");
 const navLinks = document.querySelector(".nav-links");
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const magicLoader = document.querySelector(".magic-loader");
+
+if (magicLoader) {
+  document.body.classList.add("magic-opening");
+  magicLoader.classList.add("is-active");
+
+  window.setTimeout(() => {
+    magicLoader.classList.add("is-dismissing");
+    document.body.classList.remove("magic-opening");
+    document.body.classList.add("has-arrived");
+    window.setTimeout(() => magicLoader.remove(), 720);
+  }, prefersReducedMotion ? 180 : 2000);
+}
+
+const petalLayer = document.querySelector(".petal-drift");
+
+if (petalLayer && !prefersReducedMotion) {
+  for (let index = 0; index < 12; index += 1) {
+    const petal = document.createElement("i");
+    const seed = (index * 37) % 100;
+    petal.style.setProperty("--petal-left", `${seed}%`);
+    petal.style.setProperty("--petal-size", `${8 + (index % 4) * 3}px`);
+    petal.style.setProperty("--petal-angle", `${(index * 53) % 360}deg`);
+    petal.style.setProperty("--petal-drift", `${(index % 2 ? 1 : -1) * (35 + (index % 3) * 18)}px`);
+    petal.style.setProperty("--petal-duration", `${18 + (index % 5) * 3}s`);
+    petal.style.setProperty("--petal-delay", `${-index * 2.1}s`);
+    petalLayer.append(petal);
+  }
+}
+
+if (!prefersReducedMotion) {
+  let parallaxFrame = 0;
+  const atmosphere = document.querySelector(".atmosphere");
+  const spellScene = document.querySelector(".spell-scene");
+
+  const updateParallax = () => {
+    const offset = window.scrollY;
+    document.documentElement.style.setProperty("--far-shift", `${-offset * 0.035}px`);
+    document.documentElement.style.setProperty("--near-shift", `${-offset * 0.075}px`);
+    parallaxFrame = 0;
+  };
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!parallaxFrame) {
+        parallaxFrame = window.requestAnimationFrame(updateParallax);
+      }
+    },
+    { passive: true },
+  );
+
+  if (atmosphere && spellScene) {
+    let pointerFrame = 0;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    document.addEventListener(
+      "pointermove",
+      (event) => {
+        if (event.pointerType === "touch") {
+          return;
+        }
+
+        pointerX = event.clientX / window.innerWidth;
+        pointerY = event.clientY / window.innerHeight;
+        if (!pointerFrame) {
+          pointerFrame = window.requestAnimationFrame(() => {
+            atmosphere.style.setProperty("--cursor-x", `${pointerX * 100}%`);
+            atmosphere.style.setProperty("--cursor-y", `${pointerY * 100}%`);
+            spellScene.style.setProperty("--world-x", `${(0.5 - pointerX) * 18}px`);
+            spellScene.style.setProperty("--world-y", `${(0.5 - pointerY) * 12}px`);
+            pointerFrame = 0;
+          });
+        }
+      },
+      { passive: true },
+    );
+
+    document.addEventListener("pointerdown", (event) => {
+      if (
+        !(event.target instanceof Element) ||
+        event.target.closest("a, button, input, textarea, select, .magic-loader")
+      ) {
+        return;
+      }
+
+      const burst = document.createElement("span");
+      burst.className = "spell-burst";
+      burst.setAttribute("aria-hidden", "true");
+      burst.style.left = `${event.clientX}px`;
+      burst.style.top = `${event.clientY}px`;
+      atmosphere.append(burst);
+      window.setTimeout(() => burst.remove(), 1100);
+    });
+  }
+}
 
 const revealTargets = document.querySelectorAll(
   ".intro-grid, .about-grid, .word-strip, .section-heading, .skills-grid, .skill-card, .project-showcase, .metric-box, .feature-card, .journey-heading, .journey-steps li, .stack-card, .honesty-card, .closing-card",
@@ -7,7 +105,7 @@ const revealTargets = document.querySelectorAll(
 
 if (
   "IntersectionObserver" in window &&
-  !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  !prefersReducedMotion
 ) {
   document.body.classList.add("motion-ready");
 
@@ -149,7 +247,7 @@ document.querySelectorAll(".feature-card").forEach((card) => {
 
 if (
   window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
-  !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  !prefersReducedMotion
 ) {
   document.querySelectorAll(".skill-card").forEach((card) => {
     card.addEventListener("pointermove", (event) => {
@@ -288,7 +386,7 @@ const heroVisual = document.querySelector(".hero-visual");
 if (
   heroVisual &&
   window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
-  !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  !prefersReducedMotion
 ) {
   heroVisual.addEventListener("pointermove", (event) => {
     if (event.pointerType === "touch") {
